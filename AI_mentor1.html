@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Mentor Interview</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#eef2f3; display:flex; justify-content:center; align-items:center; height:100vh; }
+  .container { background:white; padding:20px; border-radius:12px; width:480px; box-shadow:0 5px 15px rgba(0,0,0,0.2); max-height:90vh; overflow:auto; }
+  h2 { text-align:center; }
+  button { margin:5px; padding:10px; border:none; border-radius:8px; background:#3498db; color:white; cursor:pointer; }
+  button:hover { background:#2980b9; }
+  .hidden { display:none; }
+  .box { margin-top:15px; padding:10px; background:#f8f9fa; border-radius:8px; }
+  input, textarea { width:100%; padding:8px; margin-top:10px; border-radius:6px; border:1px solid #ccc; }
+  .rating span { font-size:20px; margin-right:4px; cursor:pointer; }
+  .rating span.selected { color:gold; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>🤖 AI Mentor Mock Interview</h2>
+
+  <!-- Step 1: Mode -->
+  <div id="step1">
+    <p>What is your motto today?</p>
+    <button onclick="chooseMode('prep')">📘 Preparation</button>
+    <button onclick="chooseMode('mentor')">🌟 Mentorship</button>
+  </div>
+
+  <!-- Step 2: Topics -->
+  <div id="step2" class="hidden">
+    <p>Select your topic:</p>
+    <button onclick="chooseTopic('Python')">🐍 Python</button>
+    <button onclick="chooseTopic('SQL')">🗄 SQL</button>
+    <button onclick="chooseTopic('DSA')">⚡ DSA</button>
+    <button onclick="chooseTopic('ML')">🤖 ML</button>
+  </div>
+
+  <!-- Step 3: Info -->
+  <div id="step3" class="hidden">
+    <div id="topicInfo" class="box"></div>
+    <button onclick="startWarmup()">👉 Continue</button>
+  </div>
+
+  <!-- Step 4: Warmup HR questions -->
+  <div id="warmupStep" class="hidden">
+    <div id="warmupQ" class="box"></div>
+    <textarea id="warmupAns" placeholder="Type your answer here..."></textarea>
+    <button onclick="nextWarmup()">Next</button>
+  </div>
+
+  <!-- Step 5: Technical Interview -->
+  <div id="interviewStep" class="hidden">
+    <div id="interviewQ" class="box"></div>
+    <textarea id="interviewAns" placeholder="Your answer..."></textarea>
+    <button onclick="nextInterview()">Next</button>
+  </div>
+
+  <!-- Step 6: Feedback & Ratings -->
+  <div id="feedbackStep" class="hidden">
+    <h3>✅ Interview Completed!</h3>
+    <p id="summary"></p>
+
+    <h4>📊 Feedback Ratings</h4>
+    <div class="box">
+      <p>Grammar: <span class="rating" id="grammar"></span></p>
+      <p>Vocabulary: <span class="rating" id="vocab"></span></p>
+      <p>Confidence: <span class="rating" id="confidence"></span></p>
+      <p>Technical Knowledge: <span class="rating" id="tech"></span></p>
+    </div>
+    <p id="finalFeedback" style="margin-top:10px; font-weight:bold;"></p>
+  </div>
+
+  <!-- Mentorship -->
+  <div id="mentorStep" class="hidden">
+    <p>🌟 As your mentor, here’s my advice:</p>
+    <ul>
+      <li>Stay consistent with your daily practice.</li>
+      <li>Focus on one topic deeply before switching.</li>
+      <li>Track your weekly progress.</li>
+      <li>Confidence matters as much as knowledge.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+let infos = {
+  "Python": "Python is a versatile high-level language known for its simplicity and wide use in AI, data science, and web development.",
+  "SQL": "SQL (Structured Query Language) is used to communicate with and manage relational databases.",
+  "DSA": "Data Structures and Algorithms form the foundation of computer science, focusing on problem solving and optimization.",
+  "ML": "Machine Learning enables systems to learn patterns from data and improve automatically without explicit programming."
+};
+
+// HR warmup questions
+let warmupQ = [
+  "Tell me about yourself.",
+  "Why do you want to work in this field?",
+  "What are your strengths and weaknesses?",
+  "Where do you see yourself in 5 years?"
+];
+
+// Technical interview questions
+let questions = {
+  "Python": [
+    "What are Python’s key features?",
+    "Explain the difference between list and tuple.",
+    "What is list comprehension?"
+  ],
+  "SQL": [
+    "What is the difference between WHERE and HAVING?",
+    "Explain INNER JOIN with an example.",
+    "What is normalization in databases?"
+  ],
+  "DSA": [
+    "What is the difference between stack and queue?",
+    "Explain Big O Notation with example.",
+    "How does binary search work?"
+  ],
+  "ML": [
+    "What is supervised vs unsupervised learning?",
+    "Explain overfitting and how to prevent it.",
+    "What is the bias-variance tradeoff?"
+  ]
+};
+
+let mode = "", chosenTopic = "", warmIndex=0, qIndex=0, answers=[];
+
+function chooseMode(m) {
+  mode=m;
+  document.getElementById("step1").classList.add("hidden");
+  if(m==="prep") document.getElementById("step2").classList.remove("hidden");
+  else document.getElementById("mentorStep").classList.remove("hidden");
+}
+
+function chooseTopic(topic) {
+  chosenTopic=topic;
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("step3").classList.remove("hidden");
+  document.getElementById("topicInfo").innerHTML=`<b>${topic}</b>: ${infos[topic]}`;
+}
+
+function startWarmup(){
+  document.getElementById("step3").classList.add("hidden");
+  document.getElementById("warmupStep").classList.remove("hidden");
+  showWarmup();
+}
+
+function showWarmup(){
+  if(warmIndex<warmupQ.length){
+    document.getElementById("warmupQ").textContent=warmupQ[warmIndex];
+  } else {
+    document.getElementById("warmupStep").classList.add("hidden");
+    document.getElementById("interviewStep").classList.remove("hidden");
+    showInterview();
+  }
+}
+
+function nextWarmup(){
+  let ans=document.getElementById("warmupAns").value;
+  answers.push({q:warmupQ[warmIndex], a:ans});
+  document.getElementById("warmupAns").value="";
+  warmIndex++;
+  showWarmup();
+}
+
+function showInterview(){
+  if(qIndex<questions[chosenTopic].length){
+    document.getElementById("interviewQ").textContent=questions[chosenTopic][qIndex];
+  } else {
+    document.getElementById("interviewStep").classList.add("hidden");
+    document.getElementById("feedbackStep").classList.remove("hidden");
+    document.getElementById("summary").textContent="You completed the HR + technical mock interview for "+chosenTopic+".";
+    setupRatings();
+  }
+}
+
+function nextInterview(){
+  let ans=document.getElementById("interviewAns").value;
+  answers.push({q:questions[chosenTopic][qIndex], a:ans});
+  document.getElementById("interviewAns").value="";
+  qIndex++;
+  showInterview();
+}
+
+// ⭐ Rating System
+function setupRatings(){
+  let categories=["grammar","vocab","confidence","tech"];
+  categories.forEach(cat=>{
+    let container=document.getElementById(cat);
+    container.innerHTML="";
+    for(let i=1;i<=5;i++){
+      let star=document.createElement("span");
+      star.innerHTML="★";
+      star.onclick=function(){
+        selectRating(cat,i);
+      };
+      container.appendChild(star);
+    }
+  });
+}
+
+function selectRating(category,score){
+  let stars=document.getElementById(category).children;
+  for(let i=0;i<stars.length;i++){
+    stars[i].classList.remove("selected");
+    if(i<score) stars[i].classList.add("selected");
+  }
+  document.getElementById("finalFeedback").textContent="Keep improving on weak areas. Focus on grammar, vocabulary, confidence, and technical skills!";
+}
+</script>
+</body>
+</html>
